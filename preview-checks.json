@@ -1,0 +1,11 @@
+{
+  "kind": "LVGL font-data layout previews, not hardware screenshots",
+  "temperature_widths": {
+    "23\u00b0C": 110,
+    "100\u00b0F": 133,
+    "-40\u00b0C": 138,
+    "-128\u00b0F": 146
+  },
+  "primary_contrast": "21:1 (black on white)",
+  "secondary_contrast": 9.59
+}

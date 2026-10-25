@@ -1,0 +1,7 @@
+{
+  "name": "Aura Minimal",
+  "version": "1.0.0",
+  "new_install_prompt_erase": false,
+  "new_install_improv_wait_time": 0,
+  "builds": [{"chipFamily": "ESP32", "parts": [{"path": "aura-minimal.bin", "offset": 0}]}]
+}

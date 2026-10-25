@@ -1,0 +1,2 @@
+6a88304bd3017407b823205e71241ca8d82a8c55ee8365eb62a828ae13ad2368  website/bin/aura-minimal.bin
+5189c233a0ee48ca4b214e1ce2ec33160536b765a4008ed3e6e91d0066dd7755  website/bin/aura-minimal-inverted.bin
