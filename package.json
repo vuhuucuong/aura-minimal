@@ -4,6 +4,6 @@
   "private": true,
   "description": "A high-contrast, manga-inspired Aura firmware modification and local USB installer",
   "license": "GPL-3.0-only",
-  "scripts": {"start": "node server.cjs", "icons": "node tools/generate-icons.cjs"},
+  "scripts": {"start": "node server.cjs", "icons": "node tools/generate-icons.cjs", "test": "node --test tests/installer.test.cjs"},
   "devDependencies": {"sharp": "0.35.5"}
 }

@@ -43,6 +43,10 @@ The included firmware images are factory images: installing them resets the boar
 
 The website, installer scripts, firmware, icons and sample previews are all included locally. A public website, domain and internet connection are not required to flash. Weather fetching and initial clock synchronization need internet afterward. The original Aura installer is linked at the bottom of the local page if you want to restore the original firmware.
 
+If installation stalls while connecting, hold **BOOT**, press and release **RESET/EN**, then release **BOOT** and retry. Close other installer tabs and serial monitors using the board's port. If necessary, reconnect the board with another USB data cable. After updating this repository, reload the installer page to load the fixed installer scripts. Connection attempts stop after seven tries and show an error if the board does not respond.
+
+The installation dialog shows a live, timestamped log of connection attempts, chip detection, erasing, writing, and errors. Scroll up to inspect earlier messages; the log follows new messages again when you scroll to the bottom.
+
 ## Repository guide
 
 | Path | Purpose |
@@ -90,6 +94,8 @@ powershell -ExecutionPolicy Bypass -File tools/build.ps1 -InstallDependencies
 The script keeps its compiler packages and libraries inside this project's `.build/` directory. It uses ESP32 Arduino core **3.2.0**, **ESP32 Dev Module**, **Huge App (3 MB)**, and the versions listed in `UPSTREAM-README.md`. The included `config/User_Setup.h` goes into the TFT_eSPI library root; `config/lv_conf.h` goes into `lvgl/src/`.
 
 The sketch is `firmware/aura_minimal/aura_minimal.ino`; its display layout is in `minimal_ui.h`. `AURA_INVERT_COLORS=1` builds the alternate display inversion version. The application uses Aura's original saved preference keys, though installing a merged factory image resets them.
+
+Run `npm test` to check installer connection retries and serial port cleanup with simulated devices; these checks do not flash hardware.
 
 Original icon vector sources are in `website/assets/icons/`; their LVGL image data is in `manga_icons.c`. To regenerate icon pixels, install Sharp with `npm install --ignore-scripts --no-audit --no-fund`, then run `npm run icons`. The browser installer is ESP Web Tools 10.1.1, vendored under `website/vendor/`.
 
