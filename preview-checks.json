@@ -1,11 +1,26 @@
 {
-  "kind": "LVGL font-data layout previews, not hardware screenshots",
+  "kind": "Native LVGL 9.2.2 weather layout previews and font-data settings preview; sample data, not hardware screenshots",
   "temperature_widths": {
-    "23\u00b0C": 110,
-    "100\u00b0F": 133,
-    "-40\u00b0C": 138,
-    "-128\u00b0F": 146
+    "23°C": 110,
+    "100°F": 133,
+    "-40°C": 138,
+    "-128°F": 146
   },
   "primary_contrast": "21:1 (black on white)",
-  "secondary_contrast": 9.59
+  "secondary_contrast": 9.59,
+  "weather_previews": 32,
+  "outlook_states": [
+    "rain",
+    "snow",
+    "clear",
+    "stale"
+  ],
+  "outlook_line_width_px": 216,
+  "outlook_languages": 7,
+  "outlook_clock_formats": [
+    "12-hour",
+    "24-hour"
+  ],
+  "outlook_text_fit_verified": true,
+  "outlook_tap_verified": true
 }

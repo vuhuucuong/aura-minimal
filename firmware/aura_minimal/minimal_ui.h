@@ -116,6 +116,10 @@ void create_ui() {
   lbl_today_feels_like = minimal_label(scr, s->feels_like_temp, get_font_14(), 12, 99, 216);
   lv_obj_set_height(lbl_today_feels_like, 20);
   lv_label_set_long_mode(lbl_today_feels_like, LV_LABEL_LONG_DOT);
+  lv_obj_add_flag(lbl_today_feels_like, LV_OBJ_FLAG_CLICKABLE);
+  lv_obj_set_ext_click_area(lbl_today_feels_like, 4);
+  lv_obj_add_event_cb(lbl_today_feels_like, [](lv_event_t *) { minimal_show_forecast(false); },
+                      LV_EVENT_CLICKED, nullptr);
 
   lbl_forecast = minimal_label(scr, s->seven_day_forecast, get_font_12(), 12, 124, 140);
   lv_obj_set_height(lbl_forecast, 16);
@@ -164,6 +168,7 @@ void create_ui() {
   lv_obj_set_style_text_font(lv_obj_get_child(settings, 0), &lv_font_montserrat_20, 0);
   lv_obj_add_event_cb(settings, screen_event_cb, LV_EVENT_CLICKED, nullptr);
   minimal_show_forecast(minimal_daily);
+  render_cached_weather();
 }
 
 static lv_obj_t *minimal_switch(lv_obj_t *parent, const char *text, int y, bool checked) {

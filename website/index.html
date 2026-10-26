@@ -13,16 +13,16 @@
   <script type="module" src="app.js"></script>
 </head>
 <body>
-  <header class="topbar"><a class="brand" href="./"><img src="assets/icons/sun-48.svg" alt="" width="32" height="32"> AURA <span>MINIMAL</span></a><span class="edition">INK EDITION / 1.0.0</span></header>
+  <header class="topbar"><a class="brand" href="./"><img src="assets/icons/sun-48.svg" alt="" width="32" height="32"> AURA <span>MINIMAL</span></a><span class="edition">INK EDITION / 1.1.0</span></header>
   <main>
     <section class="workspace" aria-labelledby="title">
       <div class="intro">
         <p class="eyebrow">A SMALL DISPLAY. A CLEARER VIEW.</p>
         <h1 id="title">Your weather.<br>Black on white.</h1>
         <p class="lede">A quieter take on Aura. Bigger temperature, crisp text, and original manga-inspired weather icons.</p>
-        <div class="features"><span>7-day forecast</span><span>Hourly outlook</span><span>Touch settings</span></div>
+        <div class="features"><span>Rain outlook</span><span>7-day forecast</span><span>Hourly outlook</span></div>
         <section class="install-card" aria-labelledby="install-title">
-          <div class="card-top"><h2 id="install-title">Install on your display</h2><span class="version">v1.0.0</span></div>
+          <div class="card-top"><h2 id="install-title">Install on your display</h2><span class="version">v1.1.0</span></div>
           <p class="board">ESP32-2432S028R · 2.8″ · ILI9341 · resistive touch</p>
           <ol class="steps"><li>Plug the display into this computer with a USB data cable.</li><li>Use desktop Chrome or Edge, then select its USB serial port.</li><li>Install, then join the device’s <strong>Aura</strong> Wi-Fi network to set it up.</li></ol>
           <label for="variant">Screen version</label>
@@ -35,16 +35,18 @@
       </div>
       <aside class="preview-column" aria-label="Display preview">
         <div class="preview-label"><span>THE 240 × 320 SCREEN</span><span class="live-dot">SAMPLE DATA</span></div>
-        <div class="device"><div class="screen"><img id="screen-image" src="assets/previews/daily-partly.png" width="240" height="320" alt="White weather screen showing 23 degrees Celsius, a manga-style cloud and sun, and a seven-day forecast"><div class="touch-regions"><button data-view="daily" aria-label="Show seven-day preview"></button><button data-view="hourly" aria-label="Show hourly preview"></button><button data-view="settings" aria-label="Show settings preview"></button></div></div></div>
+        <div class="device"><div class="screen"><img id="screen-image" src="assets/previews/daily-partly.png" width="240" height="320" alt="White weather screen showing 23 degrees Celsius, Rain 3–4pm at 70 percent, and a seven-day forecast"><button id="outlook-touch" aria-label="Open hourly forecast from the rain outlook"></button><div class="touch-regions"><button data-view="daily" aria-label="Show seven-day preview"></button><button data-view="hourly" aria-label="Show hourly preview"></button><button data-view="settings" aria-label="Show settings preview"></button></div></div></div>
         <div class="preview-tabs" role="group" aria-label="Preview screen"><button data-view="daily" aria-pressed="true">7 days</button><button data-view="hourly" aria-pressed="false">Hourly</button><button data-view="settings" aria-pressed="false">Settings</button></div>
         <div class="weather-picker" role="group" aria-label="Preview weather"><button data-weather="partly" aria-pressed="true" aria-label="Partly cloudy"><img src="assets/icons/partly-48.svg" alt="" width="32" height="32"></button><button data-weather="sun" aria-pressed="false" aria-label="Sunny"><img src="assets/icons/sun-48.svg" alt="" width="32" height="32"></button><button data-weather="rain" aria-pressed="false" aria-label="Rain"><img src="assets/icons/rain-48.svg" alt="" width="32" height="32"></button><button data-weather="storm" aria-pressed="false" aria-label="Thunderstorm"><img src="assets/icons/storm-48.svg" alt="" width="32" height="32"></button></div>
-        <p class="preview-caption">Pixel-sized layout preview using the firmware’s fonts and artwork. Tap the views and weather above.</p>
+        <div class="outlook-picker" role="group" aria-label="Preview rain outlook"><button data-outlook="rain" aria-pressed="true">Rain</button><button data-outlook="snow" aria-pressed="false">Snow</button><button data-outlook="clear" aria-pressed="false">Low risk</button><button data-outlook="stale" aria-pressed="false">Outdated</button></div>
+        <p class="preview-caption">Sample data rendered with the firmware’s layout, fonts, and artwork. Choose a state or tap the outlook on the screen.</p>
       </aside>
     </section>
     <section class="details" aria-label="Setup information">
       <details><summary>After installation</summary><p>Join the temporary Wi-Fi network named <strong>Aura</strong> from your phone or computer. Enter your home Wi-Fi details. On the display, tap the settings icon to choose your city, brightness, units, language, and night mode.</p><p>The bottom buttons switch between daily and hourly forecasts. You can also tap the forecast list. In settings, swipe upward for language, location, and Wi-Fi reset.</p></details>
+      <details><summary>How the rain outlook works</summary><p>When an upcoming hourly period has at least a 60% precipitation chance, the line beneath the temperature shows its time range and probability. Snow has its own label. Tap this line to open the hourly forecast.</p><p>With lower chances, the line keeps the feels-like reading. Missing forecast data is shown as unavailable. Readings older than 30 minutes are marked “Weather outdated”; the display retains the last readings and reconnects in the background.</p></details>
       <details><summary>If installation gets stuck or the device does not connect</summary><p>If installation stalls while connecting, hold <strong>BOOT</strong>, press and release <strong>RESET/EN</strong>, then release <strong>BOOT</strong> and retry. The installer stops after seven connection attempts if the board does not respond.</p><p>Close other installer tabs and applications using the same serial port. Try another USB data cable if needed. After updating the installer files, reload this page before reconnecting. Use the alternate color version only when the screen’s black and white are reversed.</p></details>
-      <details><summary>What changed from Aura</summary><p>White background, black text, a 48px main temperature, original ink weather artwork, compact forecast columns, and dedicated view and settings controls. Settings keep the same visual palette. The firmware also bounds location search results and checks forecast data before displaying it.</p><p>Built for the original ILI9341 / XPT2046 board. Compiled successfully; physical display and touch testing still needs your board.</p></details>
+      <details><summary>What changed from Aura</summary><p>White background, black text, a 48px main temperature, original ink weather artwork, compact forecast columns, and dedicated view and settings controls. Version 1.1 adds a rain and snow outlook, an outdated-data indicator, and background Wi-Fi reconnection. Settings keep the same visual palette. The firmware also bounds location search results and checks forecast data before displaying it.</p><p>Built for the original ILI9341 / XPT2046 board. Compiled successfully; physical display and touch testing still needs your board.</p></details>
     </section>
   </main>
   <footer><span>AURA MINIMAL · AN INDEPENDENT MODIFICATION</span><p>Based on <a href="https://github.com/Surrey-Homeware/Aura" target="_blank" rel="noopener">Aura by Surrey Homeware</a>. Application: GPLv3. Installer: ESP Web Tools. <a href="https://surrey-homeware.github.io/aura-installer/" target="_blank" rel="noopener">Original Aura installer ↗</a></p></footer>

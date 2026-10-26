@@ -35,6 +35,11 @@ struct LocalizedStrings {
   const char* language_label;
   const char* weekdays[7];
   const char* use_night_mode;
+  const char* outlook_rain;
+  const char* outlook_snow;
+  const char* outlook_precipitation;
+  const char* outlook_stale;
+  const char* outlook_unavailable;
 };
 
 #define DEFAULT_CAPTIVE_SSID "Aura"
@@ -65,7 +70,8 @@ static const LocalizedStrings strings_en = {
   "reconfigure Wi-Fi credentials.",
   "Language:",
   {"Sun", "Mon", "Tues", "Wed", "Thurs", "Fri", "Sat"},
-  "Dim screen at night"
+  "Dim screen at night",
+  "Rain", "Snow", "Precip.", "Weather outdated", "Forecast unavailable"
 };
 
 static const LocalizedStrings strings_es = {
@@ -96,7 +102,8 @@ static const LocalizedStrings strings_es = {
   "credenciales Wi-Fi.",
   "Idioma:",
   {"Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"},
-  "Pantalla noche"
+  "Pantalla noche",
+  "Lluvia", "Nieve", "Precip.", "Tiempo sin actualizar", "Sin pronóstico"
 };
 
 static const LocalizedStrings strings_de = {
@@ -129,7 +136,8 @@ static const LocalizedStrings strings_de = {
   "neu zu konfigurieren.",
   "Sprache:",
   {"So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"},
-  "Nacht-Dimmen"
+  "Nacht-Dimmen",
+  "Regen", "Schnee", "Niederschl.", "Wetter veraltet", "Keine Vorhersage"
 };
 
 static const LocalizedStrings strings_fr = {
@@ -162,7 +170,8 @@ static const LocalizedStrings strings_fr = {
   "les identifiants Wi-Fi.",
   "Langue:",
   {"Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"},
-  "Nuit écran"
+  "Nuit écran",
+  "Pluie", "Neige", "Précip.", "Météo non actualisée", "Prévision indisponible"
 };
 
 static const LocalizedStrings strings_tr = {
@@ -192,7 +201,8 @@ static const LocalizedStrings strings_tr = {
   "gerekecek.",
   "Dil:",
   {"Paz", "Pzt", "Sal", "Çar", "Per", "Cum", "Cmt"},
-  "Gece kısık"
+  "Gece kısık",
+  "Yagmur", "Kar", "Yagis", "Hava verisi eski", "Tahmin yok"
 };
 
 static const LocalizedStrings strings_sv = {
@@ -226,7 +236,8 @@ static const LocalizedStrings strings_sv = {
   "autentiseringsuppgifter.",
   "Sprak:",
   {"Sön", "Man", "Tis", "Ons", "Tor", "Fre", "Lör"},
-  "Nattdämpning"
+  "Nattdämpning",
+  "Regn", "Snö", "Nederb.", "Vädret ej uppdaterat", "Prognos saknas"
 };
 
 static const LocalizedStrings strings_it = {
@@ -255,7 +266,8 @@ static const LocalizedStrings strings_it = {
   "riconfigurare le credenziali Wi-Fi.",
   "Lingua:",
   {"Dom", "Lun", "Mar", "Mer", "Gio", "Ven", "Sab"},
-  "Schermo notte"
+  "Schermo notte",
+  "Pioggia", "Neve", "Precip.", "Meteo non aggiornato", "Previsioni assenti"
 };
 
 static const LocalizedStrings* get_strings(Language current_language) {

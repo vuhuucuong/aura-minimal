@@ -1,9 +1,9 @@
 {
   "name": "aura-minimal",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "description": "A high-contrast, manga-inspired Aura firmware modification and local USB installer",
   "license": "GPL-3.0-only",
-  "scripts": {"start": "node server.cjs", "icons": "node tools/generate-icons.cjs", "test": "node --test tests/installer.test.cjs"},
+  "scripts": {"start": "node server.cjs", "icons": "node tools/generate-icons.cjs", "test": "node --test tests/*.test.cjs"},
   "devDependencies": {"sharp": "0.35.5"}
 }

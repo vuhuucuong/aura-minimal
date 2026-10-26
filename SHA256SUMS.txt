@@ -1,2 +1,3 @@
-6a88304bd3017407b823205e71241ca8d82a8c55ee8365eb62a828ae13ad2368  website/bin/aura-minimal.bin
-5189c233a0ee48ca4b214e1ce2ec33160536b765a4008ed3e6e91d0066dd7755  website/bin/aura-minimal-inverted.bin
+d106a2447e92d048b2dec5758449071404166a7f7922686aa69d8e72823a5af9  website/bin/aura-minimal.bin
+a0c40b7942bad9a0c645fd0ddb77136ea2bcd24d5fda1943b3aa82efb9bfa156  website/bin/aura-minimal-inverted.bin
+7ab1b6b0a0ddb6847dd1456f94b191e72fc5c6339708093dcac9ac2b5e8f6d3d  website/bin/source-code.zip

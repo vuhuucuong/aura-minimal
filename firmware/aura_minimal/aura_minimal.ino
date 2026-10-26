@@ -1,4 +1,4 @@
-// Aura Minimal 1.0.0 — modified 2026-10-26.
+// Aura Minimal 1.1.0 — modified 2026-10-26.
 // Based on Surrey-Homeware/Aura, commit ded60e3cd5c9fc41e2f049ff1da70c26820ee9e9.
 // Application changes are licensed under GPL-3.0-only; see LICENSE.
 // Hardware, location, weather provider, languages and saved preference keys follow Aura.
@@ -14,6 +14,8 @@
 #include "esp_system.h"
 #include "translations.h"
 #include "manga_icons.h"
+#include "weather_outlook.h"
+#include "weather_response.h"
 #ifndef AURA_INVERT_COLORS
 #define AURA_INVERT_COLORS 0
 #endif
@@ -83,6 +85,7 @@ static String location = String(LOCATION_DEFAULT);
 static char dd_opts[512];
 static DynamicJsonDocument geoDoc(8 * 1024);
 static JsonArray geoResults;
+static aura::WeatherOutlook weather;
 
 // Screen dimming variables
 static bool night_mode_active = false;
@@ -121,6 +124,8 @@ static lv_obj_t *lbl_clock;
 void create_ui();
 void fetch_and_update_weather();
 void create_settings_window();
+void refresh_weather_outlook();
+void render_cached_weather();
 static void screen_event_cb(lv_event_t *e);
 static void settings_event_handler(lv_event_t *e);
 const lv_image_dsc_t *choose_icon(int wmo_code, int is_day);
@@ -183,6 +188,7 @@ static void update_clock(lv_timer_t *timer) {
   struct tm timeinfo;
 
   check_for_night_mode();
+  refresh_weather_outlook();
 
   if (!getLocalTime(&timeinfo, 0)) return;
 
@@ -308,6 +314,7 @@ void setup() {
   WiFiManager wm;
   wm.setAPCallback(apModeCallback);
   wm.autoConnect(DEFAULT_CAPTIVE_SSID);
+  WiFi.setAutoReconnect(true);
 
   lv_timer_create(update_clock, 1000, NULL);
 
@@ -332,11 +339,17 @@ void apModeCallback(WiFiManager *mgr) {
 void loop() {
   lv_timer_handler();
   static uint32_t last = millis();
-
-  if (millis() - last >= UPDATE_INTERVAL) {
+  static uint32_t reconnect_at = millis();
+  static bool was_connected = true;
+  const bool connected = WiFi.status() == WL_CONNECTED;
+  if (connected && (!was_connected || millis() - last >= UPDATE_INTERVAL)) {
     fetch_and_update_weather();
     last = millis();
+  } else if (!connected && millis() - reconnect_at >= 30000UL) {
+    WiFi.reconnect();
+    reconnect_at = millis();
   }
+  was_connected = connected;
 
   delay(5);
 }
@@ -404,6 +417,9 @@ static void location_save_event_cb(lv_event_t *e) {
   // Re‐fetch weather immediately
   lv_label_set_text(lbl_loc, opts.c_str());
   lv_label_set_text(lbl_home_location, opts.c_str());
+  // Cached readings belong to the previous city. Do not relabel them as this city.
+  weather = aura::WeatherOutlook{};
+  render_cached_weather();
   fetch_and_update_weather();
 
   lv_obj_del(location_win);
@@ -419,8 +435,8 @@ void screen_event_cb(lv_event_t *e) {
   create_settings_window();
 }
 
-void daily_cb(lv_event_t *e) { minimal_show_forecast(true); }
-void hourly_cb(lv_event_t *e) { minimal_show_forecast(false); }
+void daily_cb(lv_event_t *e) { minimal_show_forecast(false); }
+void hourly_cb(lv_event_t *e) { minimal_show_forecast(true); }
 
 
 
@@ -620,10 +636,12 @@ static void settings_event_handler(lv_event_t *e) {
 
   if (tgt == unit_switch && code == LV_EVENT_VALUE_CHANGED) {
     use_fahrenheit = lv_obj_has_state(unit_switch, LV_STATE_CHECKED);
+    render_cached_weather();
   }
 
   if (tgt == clock_24hr_switch && code == LV_EVENT_VALUE_CHANGED) {
     use_24_hour = lv_obj_has_state(clock_24hr_switch, LV_STATE_CHECKED);
+    render_cached_weather();
   }
 
   if (tgt == night_mode_switch && code == LV_EVENT_VALUE_CHANGED) {
@@ -648,7 +666,6 @@ static void settings_event_handler(lv_event_t *e) {
     // Recreate the main UI with the new language
     lv_obj_clean(lv_scr_act());
     create_ui();
-    fetch_and_update_weather();
     return;
   }
 
@@ -664,7 +681,7 @@ static void settings_event_handler(lv_event_t *e) {
     lv_obj_del(settings_win);
     settings_win = nullptr;
 
-    fetch_and_update_weather();
+    render_cached_weather();
   }
 }
 
@@ -737,140 +754,109 @@ void do_geocode_query(const char *q) {
   http.end();
 }
 
-void fetch_and_update_weather() {
-  if (WiFi.status() != WL_CONNECTED) {
-    Serial.println("WiFi no longer connected. Attempting to reconnect...");
-    WiFi.disconnect();
-    WiFiManager wm;  
-    wm.autoConnect(DEFAULT_CAPTIVE_SSID);
-    delay(1000);  
-    if (WiFi.status() != WL_CONNECTED) { 
-      Serial.println("WiFi connection still unavailable.");
-      return;   
-    }
-    Serial.println("WiFi connection reestablished.");
-  }
+void refresh_weather_outlook() {
+  if (!lbl_today_feels_like) return;
+  char summary[192];
+  aura::format_outlook(summary, sizeof(summary), weather, time(nullptr), millis(),
+                       use_fahrenheit, use_24_hour, current_language);
+  // Longer translations and am/pm crossings retain the probability on one line.
+  const lv_font_t *font = get_font_14();
+  if (lv_text_get_width(summary, strlen(summary), font, 0) > 216) font = get_font_12();
+  lv_obj_set_style_text_font(lbl_today_feels_like, font, 0);
+  if (strcmp(lv_label_get_text(lbl_today_feels_like), summary) != 0)
+    lv_label_set_text(lbl_today_feels_like, summary);
+}
 
+void render_cached_weather() {
+  minimal_show_forecast(minimal_daily);
+  if (!weather.available) {
+    lv_label_set_text_fmt(lbl_today_temp, "--°%c", use_fahrenheit ? 'F' : 'C');
+    for (int i = 0; i < aura::forecast_rows; ++i) {
+      lv_label_set_text(lbl_daily_day[i], "--");
+      lv_label_set_text(lbl_daily_low[i], "--°");
+      lv_label_set_text(lbl_daily_high[i], "--°");
+      lv_label_set_text(lbl_hourly[i], "--");
+      lv_label_set_text(lbl_hourly_temp[i], "--°");
+      lv_label_set_text(lbl_precipitation_probability[i], "--%");
+      lv_obj_add_flag(img_daily[i], LV_OBJ_FLAG_HIDDEN);
+      lv_obj_add_flag(img_hourly[i], LV_OBJ_FLAG_HIDDEN);
+    }
+    lv_obj_add_flag(img_today_icon, LV_OBJ_FLAG_HIDDEN);
+    refresh_weather_outlook();
+    return;
+  }
+  const LocalizedStrings *strings = get_strings(current_language);
+  const auto temperature = [](float c) { return use_fahrenheit ? c * 9 / 5 + 32 : c; };
+  lv_label_set_text_fmt(lbl_today_temp, "%.0f°%c", temperature(weather.temperature_c),
+                         use_fahrenheit ? 'F' : 'C');
+  lv_img_set_src(img_today_icon, choose_image(weather.weather_code, weather.is_day));
+  lv_obj_remove_flag(img_today_icon, LV_OBJ_FLAG_HIDDEN);
+  for (int i = 0; i < aura::forecast_rows; ++i) {
+    const aura::ForecastDay &day = weather.days[i];
+    time_t local_day = static_cast<time_t>(day.time + weather.utc_offset_seconds);
+    tm date{};
+    gmtime_r(&local_day, &date);
+    lv_label_set_text(lbl_daily_day[i], i == 0 && current_language != LANG_FR
+                      ? strings->today : strings->weekdays[date.tm_wday]);
+    lv_label_set_text_fmt(lbl_daily_low[i], "%.0f°", temperature(day.low_c));
+    lv_label_set_text_fmt(lbl_daily_high[i], "%.0f°", temperature(day.high_c));
+    lv_img_set_src(img_daily[i], choose_icon(day.weather_code, i == 0 ? weather.is_day : 1));
+    lv_obj_remove_flag(img_daily[i], LV_OBJ_FLAG_HIDDEN);
+
+    const aura::OutlookHour &hour = weather.hours[i];
+    time_t local_hour = static_cast<time_t>(hour.start + weather.utc_offset_seconds);
+    tm hour_time{};
+    gmtime_r(&local_hour, &hour_time);
+    const int64_t now = aura::forecast_now(weather, time(nullptr), millis());
+    String label = hour_of_day(hour_time.tm_hour);
+    if (now >= hour.start && now < hour.end && current_language != LANG_FR)
+      label = strings->now;
+    lv_label_set_text(lbl_hourly[i], label.c_str());
+    lv_label_set_text_fmt(lbl_hourly_temp[i], "%.0f°", temperature(hour.temperature_c));
+    if (aura::valid_probability(hour.probability))
+      lv_label_set_text_fmt(lbl_precipitation_probability[i], "%.0f%%", hour.probability);
+    else
+      lv_label_set_text(lbl_precipitation_probability[i], "--%");
+    lv_img_set_src(img_hourly[i], choose_icon(hour.weather_code, hour.is_day));
+    lv_obj_remove_flag(img_hourly[i], LV_OBJ_FLAG_HIDDEN);
+  }
+  refresh_weather_outlook();
+}
+
+void fetch_and_update_weather() {
+  // Retain the UI during a network outage; WiFiManager's blocking captive portal
+  // is only used for initial setup and an explicit Wi-Fi reset.
+  if (WiFi.status() != WL_CONNECTED) {
+    WiFi.reconnect();
+    refresh_weather_outlook();
+    return;
+  }
 
   String url = String("http://api.open-meteo.com/v1/forecast?latitude=")
                + latitude + "&longitude=" + longitude
                + "&current=temperature_2m,apparent_temperature,is_day,weather_code"
                + "&daily=temperature_2m_min,temperature_2m_max,weather_code"
                + "&hourly=temperature_2m,precipitation_probability,is_day,weather_code"
-               + "&forecast_hours=7"
-               + "&timezone=auto";
-
+               + "&forecast_hours=8&timeformat=unixtime&timezone=auto";
   HTTPClient http;
   http.setConnectTimeout(5000);
   http.setTimeout(5000);
   http.begin(url);
-
   if (http.GET() == HTTP_CODE_OK) {
-    Serial.println("Updated weather from open-meteo: " + url);
-
-    String payload = http.getString();
-    DynamicJsonDocument doc(32 * 1024);
-
-    if (deserializeJson(doc, payload) == DeserializationError::Ok) {
-      bool complete = !doc["current"]["temperature_2m"].isNull()
-          && !doc["current"]["apparent_temperature"].isNull();
-      const char *daily_fields[] = {"time", "temperature_2m_min", "temperature_2m_max", "weather_code"};
-      const char *hourly_fields[] = {"time", "temperature_2m", "precipitation_probability", "weather_code", "is_day"};
-      for (const char *key : daily_fields) complete &= doc["daily"][key].size() >= 7;
-      for (const char *key : hourly_fields) complete &= doc["hourly"][key].size() >= 7;
-      for (int i = 0; complete && i < 7; ++i) {
-        const char *day = doc["daily"]["time"][i];
-        const char *hour = doc["hourly"]["time"][i];
-        complete &= day && strlen(day) >= 10 && hour && strlen(hour) >= 16;
-      }
-      if (!complete) {
-        Serial.println("Incomplete weather response; keeping previous readings.");
-        http.end();
-        return;
-      }
-      float t_now = doc["current"]["temperature_2m"].as<float>();
-      float t_ap = doc["current"]["apparent_temperature"].as<float>();
-      int code_now = doc["current"]["weather_code"].as<int>();
-      int is_day = doc["current"]["is_day"].as<int>();
-
-      if (use_fahrenheit) {
-        t_now = t_now * 9.0 / 5.0 + 32.0;
-        t_ap = t_ap * 9.0 / 5.0 + 32.0;
-      }
-      const LocalizedStrings* strings = get_strings(current_language);
-
-      int utc_offset_seconds = doc["utc_offset_seconds"].as<int>();
-      configTime(utc_offset_seconds, 0, "pool.ntp.org", "time.nist.gov");
-      Serial.print("Updating time from NTP with UTC offset: ");
-      Serial.println(utc_offset_seconds);
-
-      char unit = use_fahrenheit ? 'F' : 'C';
-      lv_label_set_text_fmt(lbl_today_temp, "%.0f°%c", t_now, unit);
-      lv_label_set_text_fmt(lbl_today_feels_like, "%s %.0f°%c", strings->feels_like_temp, t_ap, unit);
-      lv_img_set_src(img_today_icon, choose_image(code_now, is_day));
-
-      JsonArray times = doc["daily"]["time"].as<JsonArray>();
-      JsonArray tmin = doc["daily"]["temperature_2m_min"].as<JsonArray>();
-      JsonArray tmax = doc["daily"]["temperature_2m_max"].as<JsonArray>();
-      JsonArray weather_codes = doc["daily"]["weather_code"].as<JsonArray>();
-
-      for (int i = 0; i < 7; i++) {
-        const char *date = times[i];
-        int year = atoi(date + 0);
-        int mon = atoi(date + 5);
-        int dayd = atoi(date + 8);
-        int dow = day_of_week(year, mon, dayd);
-        const char *dayStr = (i == 0 && current_language != LANG_FR) ? strings->today : strings->weekdays[dow];
-
-        float mn = tmin[i].as<float>();
-        float mx = tmax[i].as<float>();
-        if (use_fahrenheit) {
-          mn = mn * 9.0 / 5.0 + 32.0;
-          mx = mx * 9.0 / 5.0 + 32.0;
-        }
-
-        lv_label_set_text_fmt(lbl_daily_day[i], "%s", dayStr);
-        lv_label_set_text_fmt(lbl_daily_high[i], "%.0f°", mx);
-        lv_label_set_text_fmt(lbl_daily_low[i], "%.0f°", mn);
-        lv_img_set_src(img_daily[i], choose_icon(weather_codes[i].as<int>(), (i == 0) ? is_day : 1));
-      }
-
-      JsonArray hours = doc["hourly"]["time"].as<JsonArray>();
-      JsonArray hourly_temps = doc["hourly"]["temperature_2m"].as<JsonArray>();
-      JsonArray precipitation_probabilities = doc["hourly"]["precipitation_probability"].as<JsonArray>();
-      JsonArray hourly_weather_codes = doc["hourly"]["weather_code"].as<JsonArray>();
-      JsonArray hourly_is_day = doc["hourly"]["is_day"].as<JsonArray>();
-
-      for (int i = 0; i < 7; i++) {
-        const char *date = hours[i];  // "YYYY-MM-DD"
-        int hour = atoi(date + 11);
-        int minute = atoi(date + 14);
-        String hour_name = hour_of_day(hour);
-
-        float precipitation_probability = precipitation_probabilities[i].as<float>();
-        float temp = hourly_temps[i].as<float>();
-        if (use_fahrenheit) {
-          temp = temp * 9.0 / 5.0 + 32.0;
-        }
-
-        if (i == 0 && current_language != LANG_FR) {
-          lv_label_set_text(lbl_hourly[i], strings->now);
-        } else {
-          lv_label_set_text(lbl_hourly[i], hour_name.c_str());
-        }
-        lv_label_set_text_fmt(lbl_precipitation_probability[i], "%.0f%%", precipitation_probability);
-        lv_label_set_text_fmt(lbl_hourly_temp[i], "%.0f°", temp);
-        lv_img_set_src(img_hourly[i], choose_icon(hourly_weather_codes[i].as<int>(), hourly_is_day[i].as<int>()));
-      }
-
-
+    JsonDocument doc;
+    const DeserializationError error = deserializeJson(doc, http.getString());
+    if (!error && aura::parse_weather_response(doc.as<JsonVariantConst>(), millis(), weather)) {
+      configTime(weather.utc_offset_seconds, 0, "pool.ntp.org", "time.nist.gov");
+      render_cached_weather();
+      Serial.println("Updated weather and rain outlook.");
     } else {
-      Serial.println("JSON parse failed on result from " + url);
+      Serial.println("Invalid weather response; keeping previous readings.");
     }
   } else {
-    Serial.println("HTTP GET failed at " + url);
+    Serial.println("Weather request failed; keeping previous readings.");
   }
   http.end();
+  refresh_weather_outlook();
 }
 
 const lv_image_dsc_t *choose_image(int code, int is_day) {

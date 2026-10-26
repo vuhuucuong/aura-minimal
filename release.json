@@ -1,6 +1,6 @@
 {
   "name": "Aura Minimal — Ink Edition",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "date": "2026-10-26",
   "board": "ESP32-2432S028R / ILI9341 / XPT2046",
   "upstream": "https://github.com/Surrey-Homeware/Aura",
@@ -14,7 +14,9 @@
     "write_address": "0x0"
   },
   "source_files_sha256": {
-    "firmware/aura_minimal/aura_minimal.ino": "0f5da69abd81e09eaad772f8d7276557f7bddb5e644df6eeaacb1bb6d7ae8ad9",
+    "config/User_Setup.h": "7ceb174dfc217497047e2d78dba2e103c89977b34e43fc066a276601dbfdf777",
+    "config/lv_conf.h": "5d62fe8f74be604cd142719d1cc9ec220cbc02490a68ca8c450148d3e4a0d454",
+    "firmware/aura_minimal/aura_minimal.ino": "484526fa1bf64faf5f52bb9b49868b0133d181426b0a5aee18bc70a088edc7fb",
     "firmware/aura_minimal/lv_font_montserrat_latin_12.c": "be03dbfae1978b200ffa345b1d5380a0aa0987de26fbade396baa8f2b97ffe56",
     "firmware/aura_minimal/lv_font_montserrat_latin_14.c": "1b041afc6a3960dfa5ed1a340d3b339b22dd057ddd12afaac5d63c880ba69af8",
     "firmware/aura_minimal/lv_font_montserrat_latin_16.c": "9498f217fa7d34ae59f6875c3979a849a94188cdba2a78835117def54f46173d",
@@ -22,26 +24,26 @@
     "firmware/aura_minimal/lv_font_montserrat_latin_42.c": "2ade6cbb9745af9a166ccdb92cb37e5cc67c5c81862af0f96dccc70486ac4e39",
     "firmware/aura_minimal/manga_icons.c": "c6c541eea6c7c5811a2dd1880e8b6ca45e70bb0a53efc84d6d287b0814612eba",
     "firmware/aura_minimal/manga_icons.h": "7d2e3befe58169d147bafc30245cc720031e6875056d3fac2a8d662f0160de50",
-    "firmware/aura_minimal/minimal_ui.h": "1620b96dfdc2991f0da5ce54f1e211d17fdb4620884d71106d4236f2dccc60b7",
-    "firmware/aura_minimal/translations.h": "645cf2c7c1390f40096e2a16ae81a7b17f9a41095bf9344e5d465af9e5231329",
-    "config/lv_conf.h": "5d62fe8f74be604cd142719d1cc9ec220cbc02490a68ca8c450148d3e4a0d454",
-    "config/User_Setup.h": "7ceb174dfc217497047e2d78dba2e103c89977b34e43fc066a276601dbfdf777"
+    "firmware/aura_minimal/minimal_ui.h": "18adaae9985aeb2fcafddeaab5a36ace2726364c44cb5b80a4bdb50e320a7ab5",
+    "firmware/aura_minimal/translations.h": "b479b4b59d12689401ac30c8946b37e464ba7ed386fe1ad4e021138069b43618",
+    "firmware/aura_minimal/weather_outlook.h": "24ab510d29fccc7e3be4f352340f16254edc8476b2c455c3f6242040ad528977",
+    "firmware/aura_minimal/weather_response.h": "ae93066dbf47e471a551fe4f66656ee7fb9fd9f3d6d21a0e50ea33c969d21db0"
   },
   "firmware": {
     "standard": {
       "file": "website/bin/aura-minimal.bin",
-      "bytes": 1748512,
-      "sha256": "6a88304bd3017407b823205e71241ca8d82a8c55ee8365eb62a828ae13ad2368",
-      "application_program_bytes": 1682830,
-      "global_ram_bytes": 66348,
+      "bytes": 1750944,
+      "sha256": "d106a2447e92d048b2dec5758449071404166a7f7922686aa69d8e72823a5af9",
+      "application_program_bytes": 1685258,
+      "global_ram_bytes": 66796,
       "hardware_tested": false
     },
     "inverted": {
       "file": "website/bin/aura-minimal-inverted.bin",
-      "bytes": 1748672,
-      "sha256": "5189c233a0ee48ca4b214e1ce2ec33160536b765a4008ed3e6e91d0066dd7755",
-      "application_program_bytes": 1682990,
-      "global_ram_bytes": 66348,
+      "bytes": 1751104,
+      "sha256": "a0c40b7942bad9a0c645fd0ddb77136ea2bcd24d5fda1943b3aa82efb9bfa156",
+      "application_program_bytes": 1685418,
+      "global_ram_bytes": 66796,
       "hardware_tested": false
     }
   },
@@ -52,10 +54,15 @@
     "primary_text_contrast": "21:1",
     "physical_hardware_test": false,
     "device_flashed": false,
-    "website_http_resources": 60,
+    "website_http_resources": 126,
     "website_firmware_download_hashes": true,
     "website_desktop_controls": true,
     "website_mobile_390px_no_overflow": true,
-    "website_serial_support_detected": true
+    "website_serial_support_detected": true,
+    "firmware_outlook_tests": true,
+    "native_lvgl_weather_previews": 32,
+    "outlook_touch_navigation": true,
+    "seven_language_outlook_widths": true,
+    "live_weather_api_response": true
   }
 }

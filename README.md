@@ -1,8 +1,8 @@
-# Aura Minimal — Ink Edition 1.0.0
+# Aura Minimal — Ink Edition 1.1.0
 
 A modification of [Aura by Surrey Homeware](https://github.com/Surrey-Homeware/Aura) for the **ESP32-2432S028R with an ILI9341 display and XPT2046 resistive touch**. Based on upstream commit `ded60e3cd5c9fc41e2f049ff1da70c26820ee9e9`.
 
-Aura Minimal turns the board's 240 × 320 display into a touch-controlled weather station with current conditions, a seven-day forecast, and an hourly outlook. The Ink Edition uses a white background, larger temperature text, and original manga-inspired weather icons. This repository includes the firmware source, precompiled firmware, and a local browser installer.
+Aura Minimal turns the board's 240 × 320 display into a touch-controlled weather station with current conditions, a seven-day forecast, and an hourly outlook. The Ink Edition uses a white background, larger temperature text, and original manga-inspired weather icons. Version 1.1 adds a rain outlook beneath the temperature and a visible warning when weather data becomes outdated. This repository includes the firmware source, precompiled firmware, and a local browser installer.
 
 ## Screenshots and previews
 
@@ -15,13 +15,13 @@ The images below are layout previews made with the firmware's fonts and artwork 
 | <img src="website/assets/previews/daily-partly.png" alt="Seven-day layout preview showing London, 23 degrees Celsius, weather icons, and daily minimum and maximum temperatures" width="240" height="320"> | <img src="website/assets/previews/hourly-rain.png" alt="Hourly layout preview showing weather icons, precipitation probabilities, and temperatures for seven hourly entries" width="240" height="320"> | <img src="website/assets/previews/settings.png" alt="Settings layout preview showing brightness, night dimming, Fahrenheit, 24-hour time, and language controls" width="240" height="320"> |
 | Current conditions above seven days of minimum and maximum temperatures. | Seven hourly entries with precipitation probability and temperature. | Brightness, night dimming, temperature units, clock format, and language. |
 
-Tap **7 days** or **Hourly** at the bottom of the display to switch forecasts; tapping the forecast list also switches views. Tap the **gear** to open settings, then swipe upward for language, location, and Wi-Fi reset.
+Tap **7 days** or **Hourly** at the bottom of the display to switch forecasts; tapping the forecast list also switches views. Tap the **outlook beneath the temperature** to open the hourly forecast. Tap the **gear** to open settings, then swipe upward for language, location, and Wi-Fi reset.
 
 ### Local USB installer
 
 ![Aura Minimal local installer with firmware selection, Connect & install button, and an interactive display preview](installer-preview.jpg)
 
-The installer lets you choose the standard or inverted firmware and flash it through USB. Its preview buttons switch between daily, hourly, and settings layouts; the weather icons change the sample conditions. These previews work without connecting a board. Select **Standard ILI9341** first; use the inverted version only if the display's black and white are reversed.
+The installer lets you choose the standard or inverted firmware and flash it through USB. Its preview buttons switch between daily, hourly, and settings layouts; the weather icons change the sample conditions. **Rain**, **Snow**, **Low risk**, and **Outdated** show the new outlook states. Tap the outlook on the preview to open its hourly view. These previews work without connecting a board. Select **Standard ILI9341** first; use the inverted version only if the display's black and white are reversed.
 
 ## Install locally
 
@@ -71,7 +71,17 @@ The installation dialog shows a live, timestamped log of connection attempts, ch
 - Settings use the same light palette and larger controls. Swipe upward in settings for language, location and Wi-Fi reset.
 - Existing weather provider, city search, seven languages, brightness and night mode remain.
 
-Primary text is black on white (21:1 calculated contrast). Secondary text `#454545` on white is about 9.6:1. Actual readability also depends on panel brightness and viewing angle. Preview images use the firmware's glyph data and artwork with sample readings; they are layout previews, not photographs or a full LVGL emulator.
+Primary text is black on white (21:1 calculated contrast). Secondary text `#454545` on white is about 9.6:1. Actual readability also depends on panel brightness and viewing angle. Weather preview images are rendered with native LVGL using the actual firmware layout, fonts, and artwork with sample readings; they are not hardware screenshots. The settings preview uses the firmware's font data and artwork.
+
+## Rain outlook
+
+- The secondary line shows the **first upcoming hourly period with a precipitation probability of at least 60%**, for example `Rain 3-4pm • 70%`. The outlook covers the seven displayed hourly periods, including the remainder of the current hour.
+- Snow codes produce a **Snow** label. When the weather code does not identify rain or snow, the label says **Precip.**. All seven languages include these labels and the availability messages.
+- With lower precipitation chances, the line retains **Feels Like**. Missing probabilities show **Forecast unavailable** and `--%` in the corresponding hourly row; they never become 0%.
+- Tapping the secondary line opens the hourly forecast. Time ranges follow the clock setting; languages without distinct am/pm markers use 24-hour ranges. Long translations use the existing 12px font when needed.
+- Readings become **Weather outdated** after 30 minutes since the weather timestamp or last successful fetch. Failed requests retain the last readings. Wi-Fi reconnects in the background, and a restored connection triggers a refresh. Selecting a different city clears the previous city's readings until the new forecast arrives.
+
+The existing Open-Meteo request now fetches eight hourly timestamps to describe seven upcoming periods. Probability at each timestamp describes the **preceding hour**; the outlook and hourly rows use that interval. This is an hourly forecast, rather than a precise rain-start countdown. No additional weather service or API key is required. Cached readings are kept in RAM and do not survive a restart.
 
 ## Included reliability changes
 
@@ -91,11 +101,21 @@ For rebuilding, install Arduino CLI from Arduino's official distribution, then r
 powershell -ExecutionPolicy Bypass -File tools/build.ps1 -InstallDependencies
 ```
 
+On Linux or macOS, with Python 3 and Arduino CLI installed:
+
+```sh
+python3 tools/build.py --install-dependencies
+```
+
+The Python build command also supports Windows. Use `--variant standard` or `--variant inverted` to build one version, and `--arduino-cli /path/to/arduino-cli` to select the compiler executable.
+
 The script keeps its compiler packages and libraries inside this project's `.build/` directory. It uses ESP32 Arduino core **3.2.0**, **ESP32 Dev Module**, **Huge App (3 MB)**, and the versions listed in `UPSTREAM-README.md`. The included `config/User_Setup.h` goes into the TFT_eSPI library root; `config/lv_conf.h` goes into `lvgl/src/`.
 
 The sketch is `firmware/aura_minimal/aura_minimal.ino`; its display layout is in `minimal_ui.h`. `AURA_INVERT_COLORS=1` builds the alternate display inversion version. The application uses Aura's original saved preference keys, though installing a merged factory image resets them.
 
-Run `npm test` to check installer connection retries and serial port cleanup with simulated devices; these checks do not flash hardware.
+Run `npm test` to check installer connection retries, serial port cleanup, and the firmware's rain outlook. The firmware checks require a C++17 compiler (`g++`, or set `CXX`). They cover precipitation types and thresholds, clock formats, time-zone offsets, midnight/noon, timestamp alignment, missing JSON values, failed responses, staleness, and millisecond rollover. API parsing checks also require the pinned ArduinoJson library in `.build/`, or its `src` directory specified by `ARDUINOJSON_INCLUDE`. These checks do not flash hardware.
+
+After installing the firmware build dependencies, run `python3 tools/render-previews.py` on Linux to regenerate the 32 sample weather screens. This requires `gcc`, `g++`, and `ar`; it uses native LVGL and checks the actual outlook tap target and translated text widths. The settings image is retained separately.
 
 Original icon vector sources are in `website/assets/icons/`; their LVGL image data is in `manga_icons.c`. To regenerate icon pixels, install Sharp with `npm install --ignore-scripts --no-audit --no-fund`, then run `npm run icons`. The browser installer is ESP Web Tools 10.1.1, vendored under `website/vendor/`.
 
